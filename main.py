@@ -5,102 +5,11 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QLabel, QPushButton, QListWidget, QListWidgetItem
 )
 from PySide6.QtWidgets import QApplication, QWidget
-from PySide6.QtUiTools import QUiLoader
-from PySide6.QtCore import QFile
-from PySide6.QtCore import Qt
 from app_database.cocktail_db import CocktailDB
 from app_database.inventory_db import InventoryDB
-
-
-class MainScreen(QWidget):
-    def __init__(self, inventory_db, cocktail_db):
-        super().__init__()
-
-        # Load the .ui file
-        loader = QUiLoader()
-        ui_file = QFile("app_gui/main_screen.ui")
-        ui_file.open(QFile.ReadOnly)
-        self.ui = loader.load(ui_file, self)
-        ui_file.close()
-
-        self.inventory_db = inventory_db
-        self.cocktail_db = cocktail_db
-        self.setWindowTitle("Cocktail App")
-
-        # Layout
-        layout = QVBoxLayout()
-
-
-        # Button to navigate to Cocktail Book
-        self.btn_open_book = QPushButton("Open Cocktail Book")
-        layout.addWidget(self.btn_open_book)
-
-        cocktails_book_button = self.ui.findChild(QWidget, "btnMake")
-
-
-        # Show how many cocktails are makeable
-        # (We do it in init, but you can do it in a separate refresh method)
-        makeable_cocktails = self.cocktail_db.get_makeable_cocktails(self.inventory_db.cache)
-
-        # Set the text into the label
-        lbl = self.ui.findChild(QWidget, "lbl_can_make")
-        if lbl:
-            lbl.setText(f"{len(makeable_cocktails)} cocktails you can make")
-        else:
-            print("⚠️ QLabel 'lblMakeable' not found in .ui file")
-
-        self.setLayout(layout)
-
-
-class CocktailBookScreen(QWidget):
-    """Replaces your Kivy CocktailBookScreen."""
-
-    def __init__(self, inventory_db, cocktail_db):
-        super().__init__()
-        self.inventory_db = inventory_db
-        self.cocktail_db = cocktail_db
-
-        layout = QVBoxLayout()
-
-        # Title
-        layout.addWidget(QLabel("Cocktail Book"))
-
-        # List widget to display makeable cocktails
-        self.list_cocktails = QListWidget()
-        layout.addWidget(self.list_cocktails)
-
-        # Button to go back
-        self.btn_back = QPushButton("Back to Main")
-        layout.addWidget(self.btn_back)
-
-        self.setLayout(layout)
-
-        # Display cocktails on load
-        self.refresh_cocktail_list()
-
-    def refresh_cocktail_list(self):
-        self.list_cocktails.clear()
-        makeable = self.cocktail_db.get_makeable_cocktails(self.inventory_db.cache)
-        if not makeable:
-            self.list_cocktails.addItem("No cocktails available.")
-        else:
-            for c in makeable:
-                txt = f"{c['name']} ({c.get('flavor', 'Unknown')})"
-                self.list_cocktails.addItem(QListWidgetItem(txt))
-
-
-class BarScreen(QWidget):
-    """Replaces your Kivy BarScreen."""
-
-    def __init__(self, inventory_db):
-        super().__init__()
-        self.inventory_db = inventory_db
-
-        layout = QVBoxLayout()
-        layout.addWidget(QLabel("My Bar Inventory Screen"))
-        # You could list out the inventory here.
-        self.setLayout(layout)
-
+from app_gui.main_screen import MainScreen
+from app_gui.cocktail_book_screen import CocktailBookScreen
+from app_gui.bar_screen import BarScreen
 
 class MainWindow(QMainWindow):
     """Our main window with a QStackedWidget to switch screens."""
@@ -108,7 +17,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("Cocktail App (PySide6)")
+        self.setWindowTitle("Elon's app")
 
         # 1. Load or initialize your DB logic
         self.inventory_db = InventoryDB()
@@ -131,8 +40,8 @@ class MainWindow(QMainWindow):
         self.stacked_widget.addWidget(self.bar_screen)  # index 2
 
         # 5. Hook up signals: switch screens
-        self.main_screen.btn_open_book.clicked.connect(self.show_book_screen)
-        self.book_screen.btn_back.clicked.connect(self.show_main_screen)
+        self.main_screen.open_cocktail_book.connect(self.show_book_screen)
+
 
         # Default to main screen
         self.stacked_widget.setCurrentIndex(0)
