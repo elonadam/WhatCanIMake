@@ -1,2 +1,3 @@
 # WhatCanIMake - PySide6
-current ugly AF, trying to make main screen look better
+![Cocktail preview](curr_app_v4t.png)
+
