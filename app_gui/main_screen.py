@@ -42,14 +42,6 @@ class MainScreen(QWidget):
             }
         """)
 
-        # self.btnMake.setStyleSheet("""    hover shit
-        # QPushButton:hover {
-        #     background-color: #222;
-        # }
-        # QPushButton:pressed {
-        #  background-color: #444;
-        # }
-        # """)
         self.btnMake.setIcon(QIcon("app_gui/images/book.png"))
         self.btnMake.clicked.connect(self.open_cocktail_book.emit)
 
@@ -64,7 +56,12 @@ class MainScreen(QWidget):
 
         # Set the text into the label
         lbl = self.ui.findChild(QWidget, "lbl_can_make")
-        if lbl:
-            lbl.setText(f"cocktails you can make {len(makeable_cocktails)}")
-        else:
-            print("⚠️ QLabel 'lblMakeable' not found in .ui file")
+        lbl.setText(f"cocktails you can make\n          {len(makeable_cocktails)}")
+
+        lbl = self.ui.findChild(QWidget, "lbl_enjoyed") # the line under work bc use the cache in main
+        cocktails_made_so_far = sum(c.get("times_made", 0) for c in self.cocktail_db.cache.values())
+        lbl.setText(f"Cocktails Enjoyed \n              {cocktails_made_so_far}")
+
+        lbl = self.ui.findChild(QWidget, "lbl_total")
+        lbl.setText(f"Total Bar Ingredients\n      {self.inventory_db.count_ingredients()}")
+

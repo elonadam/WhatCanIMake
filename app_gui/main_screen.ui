@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>640</width>
-    <height>530</height>
+    <width>650</width>
+    <height>520</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -16,8 +16,14 @@
     <height>0</height>
    </size>
   </property>
+  <property name="tabletTracking">
+   <bool>true</bool>
+  </property>
   <property name="windowTitle">
    <string>Form</string>
+  </property>
+  <property name="autoFillBackground">
+   <bool>true</bool>
   </property>
   <property name="styleSheet">
    <string notr="true"/>
@@ -69,6 +75,12 @@
      <height>130</height>
     </rect>
    </property>
+   <property name="font">
+    <font>
+     <family>Perpetua</family>
+     <pointsize>16</pointsize>
+    </font>
+   </property>
    <property name="text">
     <string>My Bar</string>
    </property>
@@ -81,6 +93,12 @@
      <width>340</width>
      <height>130</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Perpetua</family>
+     <pointsize>16</pointsize>
+    </font>
    </property>
    <property name="text">
     <string>Surprise Me</string>
