@@ -1,6 +1,6 @@
 # cocktail_book_screen.py
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel, QListWidget, QListWidgetItem, QDialog, \
-    QLineEdit, QHBoxLayout
+    QLineEdit, QHBoxLayout, QAbstractItemView
 from PySide6.QtCore import QFile, Signal, Qt
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtGui import QIcon, QFont
@@ -20,8 +20,8 @@ class CocktailDetailDialog(QDialog):
         Times Made: {cocktail.get("times_made", 0)}
 
         Ingredients: {cocktail.get('ingredients')}
-        
-        
+
+
         Instructions:
         {cocktail.get('instructions', 'No instructions available.')}
         """
@@ -72,6 +72,10 @@ class CocktailBookScreen(QWidget):
 
         self.list_cocktails.itemClicked.connect(self.show_cocktail_details)
 
+        #  smooth scroll
+        self.list_cocktails.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
+        self.list_cocktails.verticalScrollBar().setSingleStep(9)
+
         # 5. Initialize
         self.apply_style()  # optional
         self.refresh_cocktail_list()
@@ -89,11 +93,11 @@ class CocktailBookScreen(QWidget):
             background-color: #1f1f1f;
             color: #ffffff;
         }
-        
+
         QWidget#MainContainer {
             background-color: #1f1f1f;
         }
-        
+
         QWidget#TitleBar {
             background-color: #1a1a1a;
         }
@@ -109,14 +113,16 @@ class CocktailBookScreen(QWidget):
             background-color: #2c2c2c;
             border: none;
         }
-        
+
         QListWidget::item {
             background-color: #2c2c2c;
             margin-top: 3px;
             margin-bottom: 2px;
+            margin-left: 3px;
+            margin-right: 3px;
             border-radius: 5px;
         }
-        
+
         QPushButton {
             background-color: #444444;
             border: none;
@@ -139,6 +145,35 @@ class CocktailBookScreen(QWidget):
 
         QLabel {
             color: white;
+        }
+        
+        QScrollBar:vertical {
+            border: none;
+            background: #1e1e1e;
+            width: 12px;
+            margin: 0px 0px 0px 0px;
+            border-radius: 6px;
+        }
+        
+        QScrollBar::handle:vertical {
+            background: #44475a;
+            min-height: 20px;
+            border-radius: 6px;
+        }
+        
+        QScrollBar::handle:vertical:hover {
+            background: #6272a4;
+        }
+        
+        QScrollBar::add-line:vertical,
+        QScrollBar::sub-line:vertical {
+            height: 0;
+            background: none;
+        }
+        
+        QScrollBar::add-page:vertical,
+        QScrollBar::sub-page:vertical {
+            background: none;
         }
         """)
 
@@ -184,7 +219,7 @@ class CocktailBookScreen(QWidget):
     def create_cocktail_widget(self, cocktail):
         outer = QWidget()
         outer_layout = QVBoxLayout(outer)
-        outer_layout.setContentsMargins(0, 0, 0, 15)  #  10px bottom margin
+        outer_layout.setContentsMargins(0, 0, 0, 15)  # 10px bottom margin
         outer_layout.setSpacing(0)
 
         inner = QWidget()
