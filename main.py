@@ -1,5 +1,6 @@
 import sys
 from PySide6.QtCore import Qt, QPoint
+
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout,
     QHBoxLayout, QPushButton, QLabel, QStackedWidget
@@ -12,6 +13,7 @@ from app_gui.main_screen import MainScreen
 from app_gui.cocktail_book_screen import CocktailBookScreen
 from app_gui.bar_screen import BarScreen
 from app_gui.title_bar import TitleBar
+from utilities import slide_transition
 
 
 class MainWindow(QMainWindow):
@@ -103,11 +105,12 @@ class MainWindow(QMainWindow):
     # *** 6) Navigation ***
     def show_book_screen(self):
         self.book_screen.refresh_cocktail_list()
-        self.stacked_widget.setCurrentWidget(self.book_screen)
+        # self.stacked_widget.setCurrentWidget(self.book_screen)
+        slide_transition(self.stacked_widget, self.stacked_widget.indexOf(self.book_screen))
 
     def show_main_screen(self):
-        self.stacked_widget.setCurrentWidget(self.main_screen)
-
+        # self.stacked_widget.setCurrentWidget(self.main_screen)
+        slide_transition(self.stacked_widget, self.stacked_widget.indexOf(self.main_screen))
     def goBack(self):
         print("You clicked Go Back")
         # E.g. go to your main screen or handle custom logic:
