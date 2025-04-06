@@ -3,6 +3,69 @@ import unicodedata
 import re
 import json
 import os
+from PySide6.QtCore import QPropertyAnimation, QRect
+
+from PySide6.QtCore import QPropertyAnimation, QRect
+
+
+def slide_transition(stack, new_index):
+    """
+    Animate a smooth slide transition between widgets in a QStackedWidget.
+
+    Parameters:
+    -----------
+    stack : QStackedWidget
+        The stacked widget managing multiple screens.
+    new_index : int
+        The index of the widget to slide into view.
+
+    Behavior:
+    ---------
+    - If the new index is the same as the current one, does nothing.
+    - Animates the current screen sliding out to the left.
+    - Animates the next screen sliding in from the right.
+    - Updates the current index when animation completes.
+    """
+    current_index = stack.currentIndex()
+    if new_index == current_index:
+        return
+
+    current_widget = stack.currentWidget()
+    next_widget = stack.widget(new_index)
+
+    w, h = stack.width(), stack.height()
+
+    # Position the incoming screen off-screen to the right
+    next_widget.setGeometry(QRect(w, 0, w, h))
+    next_widget.show()
+
+    # Animate current screen moving left
+    anim_out = QPropertyAnimation(current_widget, b"geometry")
+    anim_out.setDuration(300)
+    anim_out.setStartValue(QRect(0, 0, w, h))
+    anim_out.setEndValue(QRect(-w, 0, w, h))
+
+    # Animate new screen moving in from the right
+    anim_in = QPropertyAnimation(next_widget, b"geometry")
+    anim_in.setDuration(300)
+    anim_in.setStartValue(QRect(w, 0, w, h))
+    anim_in.setEndValue(QRect(0, 0, w, h))
+
+    # When done, update the current index
+    def finalize():
+        stack.setCurrentIndex(new_index)
+        # Clear references
+        stack._anim_in = None
+        stack._anim_out = None
+
+    anim_in.finished.connect(finalize)
+
+    # Save animations to prevent GC
+    stack._anim_in = anim_in
+    stack._anim_out = anim_out
+
+    anim_out.start()
+    anim_in.start()
 
 
 def get_inventory_hash(inventory_cache):
@@ -12,6 +75,7 @@ def get_inventory_hash(inventory_cache):
     """
     inventory_json = json.dumps(inventory_cache, sort_keys=True)
     return hash(inventory_json)
+
 
 def get_recipe_hash(cocktail_cache):
     """
@@ -46,6 +110,8 @@ def save_hashes(inventory_hash, recipe_hash, filepath="hashes_cache.json"):
     }
     with open(filepath, "w", encoding="utf-8") as f:
         json.dump(data, f)
+
+
 def remove_diacritics(text: str) -> str:
     """
     Removes all diacritic marks (accents) from a given text.
@@ -112,7 +178,6 @@ def canonicalize(ingredient: str) -> str:
         "light rum": "white rum",
         "malibu rum": "coconut rum",
         "triple sec": "orange liqueur",
-
 
         # Coffee/Tea
         "freshly brewed espresso": "espresso",
