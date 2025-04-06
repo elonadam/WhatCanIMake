@@ -1,7 +1,33 @@
 # cocktail_book_screen.py
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel, QListWidget, QListWidgetItem, QLineEdit
-from PySide6.QtCore import QFile, Signal
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel, QListWidget, QListWidgetItem, QDialog, \
+    QLineEdit, QHBoxLayout
+from PySide6.QtCore import QFile, Signal, Qt
 from PySide6.QtUiTools import QUiLoader
+from PySide6.QtGui import QIcon, QFont
+
+
+class CocktailDetailDialog(QDialog):
+    def __init__(self, cocktail):
+        super().__init__()
+        self.setWindowTitle(cocktail["name"])
+        layout = QVBoxLayout(self)
+
+        details = f"""
+        Name: {cocktail["name"]}
+        ABV: {cocktail.get("abv", "Unknown")}
+        Glass: {cocktail.get("glass", "Unknown")}
+        Garnish: {cocktail.get("garnish", "None")}
+        Times Made: {cocktail.get("times_made", 0)}
+
+        Ingredients: {cocktail.get('ingredients')}
+        
+        
+        Instructions:
+        {cocktail.get('instructions', 'No instructions available.')}
+        """
+        lbl_details = QLabel(details)
+        lbl_details.setWordWrap(True)
+        layout.addWidget(lbl_details)
 
 
 class CocktailBookScreen(QWidget):
@@ -44,9 +70,18 @@ class CocktailBookScreen(QWidget):
         self.btn_easy.clicked.connect(self.toggle_easy)
         self.btn_tasty.clicked.connect(self.toggle_tasty)
 
+        self.list_cocktails.itemClicked.connect(self.show_cocktail_details)
+
         # 5. Initialize
         self.apply_style()  # optional
         self.refresh_cocktail_list()
+
+    def show_cocktail_details(self, item):
+        row = self.list_cocktails.row(item)
+        cocktail = self.filtered[row]  # Use the current filtered list
+        # Now open a detail dialog (you'll need to implement CocktailDetailDialog)
+        dialog = CocktailDetailDialog(cocktail)
+        dialog.exec()
 
     def apply_style(self):
         self.setStyleSheet("""
@@ -74,7 +109,14 @@ class CocktailBookScreen(QWidget):
             background-color: #2c2c2c;
             border: none;
         }
-
+        
+        QListWidget::item {
+            background-color: #2c2c2c;
+            margin-top: 3px;
+            margin-bottom: 2px;
+            border-radius: 5px;
+        }
+        
         QPushButton {
             background-color: #444444;
             border: none;
@@ -99,45 +141,103 @@ class CocktailBookScreen(QWidget):
             color: white;
         }
         """)
+
     def refresh_cocktail_list(self):
         self.list_cocktails.clear()
+        self.filtered = self.all_cocktails  # 1) Start with all cocktails
 
-        # 1) Start with all cocktails
-        filtered = self.all_cocktails
-
-        # 2) Apply search filter
-        if self.search_text:
-            filtered = [
-                c for c in filtered
+        if self.search_text:  # 2) Apply search filter
+            self.filtered = [
+                c for c in self.filtered
                 if self.search_text.lower() in c["name"].lower()
             ]
 
-        # 3) Apply toggles
-        if self.show_favorites:
-            filtered = [
-                c for c in filtered
+        if self.show_favorites:  # 3) Apply toggles
+            self.filtered = [
+                c for c in self.filtered
                 if c.get("is_favorite", False)
             ]
         if self.show_easy:
             # or c['is_easy_to_make'] if that’s your DB property
-            filtered = [
-                c for c in filtered
+            self.filtered = [
+                c for c in self.filtered
                 if c.get("is_easy_to_make", False)
             ]
         if self.show_tasty:
-            filtered = [
-                c for c in filtered
-                if c.get("flavor", "").lower() != "bad"
+            self.filtered = [
+                c for c in self.filtered
+                if c.get("flavor", "").lower() != "bad"  # TODO 2 define tase by dropdown
                 # or however you define “tasty”
             ]
 
-        # 4) Show final results
-        if not filtered:
-            self.list_cocktails.addItem("No cocktails found.")
+        if not self.filtered:  # 4) Show final results
+            item = QListWidgetItem("No cocktails found.")
+            self.list_cocktails.addItem(item)
         else:
-            for c in filtered:
-                txt = f"{c['name']} ({c.get('flavor', 'Unknown')})"
-                self.list_cocktails.addItem(txt)
+            for cocktail in self.filtered:
+                item_widget = self.create_cocktail_widget(cocktail)
+                item = QListWidgetItem()
+                item.setSizeHint(item_widget.sizeHint())
+                self.list_cocktails.addItem(item)
+                self.list_cocktails.setItemWidget(item, item_widget)
+
+    def create_cocktail_widget(self, cocktail):
+        outer = QWidget()
+        outer_layout = QVBoxLayout(outer)
+        outer_layout.setContentsMargins(0, 0, 0, 15)  #  10px bottom margin
+        outer_layout.setSpacing(0)
+
+        inner = QWidget()
+        layout = QHBoxLayout(inner)
+        layout.setContentsMargins(5, 5, 5, 5)
+
+        # Circle with initial
+        circle_label = QLabel(cocktail["name"][0].upper())
+        circle_label.setFixedSize(40, 40)
+        circle_label.setAlignment(Qt.AlignCenter)
+        circle_label.setStyleSheet("""
+            QLabel {
+                background-color: #6272a4;
+                border-radius: 20px;
+                color: #f8f8f2;
+                font-weight: bold;
+                font-size: 18px;
+            }
+        """)
+
+        # Cocktail name and ingredients vertical layout
+        text_layout = QVBoxLayout()
+        name_layout = QHBoxLayout()
+
+        # Cocktail Name
+        lbl_name = QLabel(cocktail["name"])
+        lbl_name.setFont(QFont("Segoe UI", 12, QFont.Bold))
+
+        name_layout.addWidget(lbl_name)
+
+        # Favorite Icon
+        if cocktail.get("is_favorite"):
+            heart_icon = QLabel("❤")
+            heart_icon.setStyleSheet("color: #ff5555; font-size: 16px;")
+            name_layout.addWidget(heart_icon)
+
+        name_layout.addStretch()
+
+        # Ingredients (made_from)
+        ingredients = (cocktail.get("made_from"))
+        lbl_ingredients = QLabel(ingredients)
+        lbl_ingredients.setFont(QFont("Segoe UI", 10))
+        lbl_ingredients.setStyleSheet("color: #bbbbbb;")
+
+        text_layout.addLayout(name_layout)
+        text_layout.addWidget(lbl_ingredients)
+
+        layout.addWidget(circle_label)
+        layout.addLayout(text_layout)
+        inner.setLayout(layout)
+
+        outer_layout.addWidget(inner)
+        return outer
 
     def handle_search(self, txt):
         self.search_text = txt  # remember it
@@ -154,4 +254,3 @@ class CocktailBookScreen(QWidget):
     def toggle_tasty(self):
         self.show_tasty = self.btn_tasty.isChecked()
         self.refresh_cocktail_list()
-

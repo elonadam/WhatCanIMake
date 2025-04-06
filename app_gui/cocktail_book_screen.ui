@@ -49,7 +49,7 @@
      </layout>
     </widget>
    </item>
-   <item>
+   <item alignment="Qt::AlignmentFlag::AlignLeft">
     <widget class="QWidget" name="widget_2" native="true">
      <layout class="QHBoxLayout" name="horizontalLayout_3">
       <item>
