@@ -26,7 +26,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Elon's app")
         self.setWindowFlags(Qt.FramelessWindowHint)
         self.setAttribute(Qt.WA_TranslucentBackground)  # finally without white bg
-        self.setMinimumSize(640, 530)
+        self.setMinimumSize(660, 530)
 
         # *** 1) Main container & layout ***
         container = QWidget()
