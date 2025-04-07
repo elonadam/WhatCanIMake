@@ -1,5 +1,5 @@
 # main_screen.py
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QPushButton
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel
 from PySide6.QtCore import QFile, Signal, QSize
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtGui import QIcon
@@ -50,18 +50,23 @@ class MainScreen(QWidget):
         layout.addWidget(self.ui)
         self.setLayout(layout)
 
-        # Show how many cocktails are makeable
-        # (We do it in init, but you can do it in a separate refresh method)
         makeable_cocktails = self.cocktail_db.get_makeable_cocktails(self.inventory_db.cache)
 
-        # Set the text into the label
-        lbl = self.ui.findChild(QWidget, "lbl_can_make")
-        lbl.setText(f"cocktails you can make\n          {len(makeable_cocktails)}")
+        lbl = self.ui.findChild(QLabel, "lbl_num_can_make")
+        lbl.setText(f"{len(makeable_cocktails)}")
+        #lbl.setAlignment(Qt.AlignCenter)
 
-        lbl = self.ui.findChild(QWidget, "lbl_enjoyed") # the line under work bc use the cache in main
+        lbl = self.ui.findChild(QLabel, "lbl_num_enjoyed")  # the line under work bc use the cache in main
         cocktails_made_so_far = sum(c.get("times_made", 0) for c in self.cocktail_db.cache.values())
-        lbl.setText(f"Cocktails Enjoyed \n              {cocktails_made_so_far}")
+        lbl.setText(f"{cocktails_made_so_far}")
+        #lbl.setAlignment(Qt.AlignCenter)
 
-        lbl = self.ui.findChild(QWidget, "lbl_total")
-        lbl.setText(f"Total Bar Ingredients\n      {self.inventory_db.count_ingredients()}")
+        lbl = self.ui.findChild(QLabel, "lbl_num_total")
+        lbl.setText(f"{self.inventory_db.count_ingredients()}")
+        #lbl.setAlignment(Qt.AlignCenter)
+
+
+
+
+
 

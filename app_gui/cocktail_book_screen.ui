@@ -38,6 +38,12 @@
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
        <widget class="QLabel" name="label">
+        <property name="font">
+         <font>
+          <family>Levenim MT</family>
+          <pointsize>12</pointsize>
+         </font>
+        </property>
         <property name="text">
          <string>Search By Name</string>
         </property>
@@ -73,12 +79,19 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="btn_tasty">
+       <widget class="QPushButton" name="btn_stirred">
         <property name="text">
-         <string>tasty</string>
+         <string>stirred</string>
         </property>
         <property name="checkable">
          <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="combo_flavor">
+        <property name="placeholderText">
+         <string>Flavor</string>
         </property>
        </widget>
       </item>

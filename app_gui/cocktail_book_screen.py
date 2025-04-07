@@ -1,6 +1,6 @@
 # cocktail_book_screen.py
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel, QListWidget, QListWidgetItem, QDialog, \
-    QLineEdit, QHBoxLayout, QAbstractItemView
+    QLineEdit, QHBoxLayout, QAbstractItemView, QComboBox
 from PySide6.QtCore import QFile, Signal, Qt
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtGui import QIcon, QFont
@@ -42,7 +42,7 @@ class CocktailBookScreen(QWidget):
         self.search_text = ""
         self.show_favorites = False
         self.show_easy = False
-        self.show_tasty = False
+        self.show_stirred = False
 
         # 1. Load .ui
         loader = QUiLoader()
@@ -56,21 +56,29 @@ class CocktailBookScreen(QWidget):
         self.layout().addWidget(self.ui)
 
         # 3. Find widgets by objectName
-        self.btn_back = self.ui.findChild(QPushButton, "btn_back")  # not showing
+        self.btn_back = self.ui.findChild(QPushButton, "btn_back")  # not showing TODO 4 delete this
         self.lbl_title = self.ui.findChild(QLabel, "lbl_title")
         self.name_search = self.ui.findChild(QLineEdit, "name_search")
         self.btn_favorites = self.ui.findChild(QPushButton, "btn_favorites")
         self.btn_easy = self.ui.findChild(QPushButton, "btn_easy")
-        self.btn_tasty = self.ui.findChild(QPushButton, "btn_tasty")
+        self.btn_stirred = self.ui.findChild(QPushButton, "btn_stirred")
         self.list_cocktails = self.ui.findChild(QListWidget, "list_cocktails")
+        self.combo_flavor = self.ui.findChild(QComboBox, "combo_flavor") # the drop down menu
+
+        print([btn.objectName() for btn in self.ui.findChildren(QPushButton)])
 
         # 4. Connect signals
         self.name_search.textChanged.connect(self.handle_search)
         self.btn_favorites.clicked.connect(self.toggle_favorites)
         self.btn_easy.clicked.connect(self.toggle_easy)
-        self.btn_tasty.clicked.connect(self.toggle_tasty)
+        self.btn_stirred.clicked.connect(self.toggle_stirred)
 
         self.list_cocktails.itemClicked.connect(self.show_cocktail_details)
+
+        #load the drop down with flavors
+        self.combo_flavor.addItem("All")
+        self.combo_flavor.addItems(["Fruity & Tropical", "Bitter & Herbal", "Floral & Aromatic", "Sour & Tart", "Sweet & Dessert-Like"])  # use your actual flavors
+        self.combo_flavor.currentTextChanged.connect(self.refresh_cocktail_list)
 
         #  smooth scroll
         self.list_cocktails.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
@@ -175,6 +183,26 @@ class CocktailBookScreen(QWidget):
         QScrollBar::sub-page:vertical {
             background: none;
         }
+        
+        QComboBox {
+            background-color: #444444;
+            border: none;
+            padding: 8px 12px;
+            margin: 4px;
+            border-radius: 6px;
+            color: white;
+        }
+        
+        QComboBox:hover {
+            background-color: #555555;
+        }
+        
+        QComboBox::drop-down {
+            border: none;
+            background: transparent;
+        }
+
+        
         """)
 
     def refresh_cocktail_list(self):
@@ -192,17 +220,27 @@ class CocktailBookScreen(QWidget):
                 c for c in self.filtered
                 if c.get("is_favorite", False)
             ]
+
+        if self.show_stirred:
+            self.filtered = [
+                c for c in self.filtered
+                if (c.get("prep_method") or "") == "Stirred"
+            ]
+
         if self.show_easy:
             # or c['is_easy_to_make'] if that’s your DB property
             self.filtered = [
                 c for c in self.filtered
                 if c.get("is_easy_to_make", False)
             ]
-        if self.show_tasty:
+
+        selected_flavor = self.combo_flavor.currentText()
+
+        if selected_flavor.lower() != "all":
+            selected = selected_flavor.strip().lower()
             self.filtered = [
                 c for c in self.filtered
-                if c.get("flavor", "").lower() != "bad"  # TODO 2 define tase by dropdown
-                # or however you define “tasty”
+                if selected in c.get("flavor", "").strip().lower()
             ]
 
         if not self.filtered:  # 4) Show final results
@@ -286,6 +324,6 @@ class CocktailBookScreen(QWidget):
         self.show_easy = self.btn_easy.isChecked()
         self.refresh_cocktail_list()
 
-    def toggle_tasty(self):
-        self.show_tasty = self.btn_tasty.isChecked()
+    def toggle_stirred(self):
+        self.show_stirred = self.btn_stirred.isChecked()
         self.refresh_cocktail_list()
